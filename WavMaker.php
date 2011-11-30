@@ -42,28 +42,123 @@ require_once 'WavFile.php';
 
 class WavMaker extends WavFile
 {
-    public function generateSineWav($frequency = 440, $seconds = 1, $channels = 0) {
-        $amp = (pow(2, $this->getBitsPerSample())) / 2 - 1;
-        
-        $t = (M_PI * 2 * $frequency) / ($this->getSampleRate() * $this->getNumChannels());
-        
-        $numSamples = $this->getSampleRate() * $this->getNumChannels() * $seconds;
-        
-        $packChr = 'v'; // 16 bit unsigned int
-        
-        if ($this->getBitsPerSample() == 8) {
-            $packChr = 'C';
-        } else if ($this->getBitsPerSample() == 32) {
-            $packChr = 'V';
-        }
+    public function generateSineWav($frequency = 440, $duration = 1.0) {
+        $numChannels = $this->getNumChannels();
+        $numSamples  = $this->getSampleRate() * $seconds;
+        $amplitude   = $this->getAmplitude();
+        $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
         
         for ($i = 0; $i < $numSamples - 1; ++$i) {
             $sample = '';
-            for ($channel = 0; $channel < $this->getNumChannels(); ++$channel) {
-                $sample .= pack($packChr, $amp * sin($t * $i));
+            for ($channel = 0; $channel < $numChannels; ++$channel) {
+                $sample .= $this->packSample($amplitude * sin($t * $i));
             }
             
             $this->_samples[] = $sample;
         }
+    }
+    
+    public function generateSquareWave($frequency = 440, $duration = 1.0)
+    {
+        $numChannels = $this->getNumChannels();
+        $numSamples  = $this->getSampleRate() * $duration;
+        $amplitude   = $this->getAmplitude();
+        $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
+        
+        for ($i = 0; $i < $numSamples - 1; ++$i) {
+            $sample = '';
+            for ($channel = 0; $channel < $numChannels; ++$channel) {
+                $sample .= $this->packSample($amplitude * $this->sgn(sin($t * $i)));
+            }
+            
+            $this->_samples[] = $sample;
+        }
+    }
+    
+    public function generateSilence($duration = 1.0) {
+        $numChannels = $this->getNumChannels();
+        $numSamples  = $this->getSampleRate() * $duration;
+        
+        for ($i = 0; $i < $numSamples; ++$i) {
+            $sample = '';
+            for ($channel = 0; $channel < $numChannels; ++$channel) {
+                $sample .= $this->packSample(0);
+            }
+            
+            $this->_samples[] = $sample;
+        }
+    }
+    
+    public function generateNoise($duration = 1.0)
+    {
+        $numChannels = $this->getNumChannels();
+        $numSamples  = $this->getSampleRate() * $duration;
+        $minAmp      = $this->getMinAmplitude();
+        $maxAmp      = $this->getAmplitude();
+        
+        echo "Min amp = $minAmp - max amp = $maxAmp<br />";
+        
+        for ($s = 0; $s < $numSamples; ++$s) {
+            $sample = '';
+            for ($channel = 0; $channel < $numChannels; ++$channel) {
+                $sample .= $this->packSample(rand($minAmp, $maxAmp));
+            }
+            
+            $this->_samples[] = $sample;
+        }
+    }
+    
+    public function getPackFormatString()
+    {
+        switch($this->getBitsPerSample()) {
+            case 8:
+                return 'C'; // unsigned char
+                
+            case 16:
+                return 'v'; // signed short - little endian
+                
+            case 24:
+                return 'C3';
+        }
+        
+        throw new Exception("Invalid bits per sample");
+    }
+    
+    public function packSample($value)
+    {
+        switch ($this->getBitsPerSample()) {
+            case 8:
+            case 16:
+                return pack($this->getPackFormatString(), $value);
+                
+            case 24:
+                // 3 byte packed integer, little endian
+                return pack('C3', ($value & 0xff),
+                                  ($value >>  8) & 0xff,
+                                  ($value >> 16) & 0xff);
+        }
+    }
+    
+    public function save($filename)
+    {
+        $fp = @fopen($filename, 'w+b');
+        
+        if (!$fp) {
+            throw new Exception("Failed to open " . htmlspecialchars($filename) . " for writing");
+        }
+        
+        fwrite($fp, $this->makeHeader());
+        fwrite($fp, $this->getDataSubchunk());
+        fclose($fp);
+        
+        return true;
+    }
+    
+    public function sgn($value)
+    {
+        if ($value > 0) return  1;
+        if ($value < 0) return -1;
+        
+        return 0;
     }
 }
