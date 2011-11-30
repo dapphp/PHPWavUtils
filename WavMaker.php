@@ -44,7 +44,7 @@ class WavMaker extends WavFile
 {
     public function generateSineWav($frequency = 440, $duration = 1.0) {
         $numChannels = $this->getNumChannels();
-        $numSamples  = $this->getSampleRate() * $seconds;
+        $numSamples  = $this->getSampleRate() * $duration;
         $amplitude   = $this->getAmplitude();
         $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
         
@@ -96,8 +96,6 @@ class WavMaker extends WavFile
         $minAmp      = $this->getMinAmplitude();
         $maxAmp      = $this->getAmplitude();
         
-        echo "Min amp = $minAmp - max amp = $maxAmp<br />";
-        
         for ($s = 0; $s < $numSamples; ++$s) {
             $sample = '';
             for ($channel = 0; $channel < $numChannels; ++$channel) {
@@ -106,52 +104,6 @@ class WavMaker extends WavFile
             
             $this->_samples[] = $sample;
         }
-    }
-    
-    public function getPackFormatString()
-    {
-        switch($this->getBitsPerSample()) {
-            case 8:
-                return 'C'; // unsigned char
-                
-            case 16:
-                return 'v'; // signed short - little endian
-                
-            case 24:
-                return 'C3';
-        }
-        
-        throw new Exception("Invalid bits per sample");
-    }
-    
-    public function packSample($value)
-    {
-        switch ($this->getBitsPerSample()) {
-            case 8:
-            case 16:
-                return pack($this->getPackFormatString(), $value);
-                
-            case 24:
-                // 3 byte packed integer, little endian
-                return pack('C3', ($value & 0xff),
-                                  ($value >>  8) & 0xff,
-                                  ($value >> 16) & 0xff);
-        }
-    }
-    
-    public function save($filename)
-    {
-        $fp = @fopen($filename, 'w+b');
-        
-        if (!$fp) {
-            throw new Exception("Failed to open " . htmlspecialchars($filename) . " for writing");
-        }
-        
-        fwrite($fp, $this->makeHeader());
-        fwrite($fp, $this->getDataSubchunk());
-        fclose($fp);
-        
-        return true;
     }
     
     public function sgn($value)
