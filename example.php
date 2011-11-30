@@ -3,21 +3,57 @@
 require_once 'WavFile.php';
 require_once 'WavMaker.php';
 
+siusecase();
 //maryHad();
 //noiseTest();
 //sineTest();
-squareTest();
+//squareTest();
 //sineWave();
-//mergeWavs();
+mergeWavs();
+
+function siusecase()
+{
+	$audio_path = dirname(__FILE__) . '/audio';
+	
+	$wav = new WavMaker(1, 11025, 16);
+	
+	$letters = array('p', 'k', 'l', '2', '5', 'm');
+	$wavs    = array();
+	foreach ($letters as $letter) {
+		$letter = strtoupper($letter);
+		
+		if (!isset($wavs[$letter])) {
+			try {
+				$l = new WavFile($audio_path . '/' . $letter . '.wav');
+				$wavs[$letter] = $l;
+			} catch (Exception $ex) {
+				// 	failed to open file...handle
+				die("Error with character '$letter': " . $ex->getMessage());
+			}
+		}
+
+		$wav->appendWav($wavs[$letter]);
+	}
+	
+	$wav->save(dirname(__FILE__) . '/wavs/siout.wav');
+		
+	$sound = new WavFile(dirname(__FILE__) . '/wavs/mary.wav');
+	
+	$wav->mergeWav($sound);
+	
+	$wav->save(dirname(__FILE__) . '/wavs/siout-merged.wav');
+	
+	die('Saved captcha');
+}
 
 function mergeWavs()
 {
-    $wav1 = new WavFile(dirname(__FILE__) . '/wavs/sine-1-8000-8.wav');
-    $wav2 = new WavFile(dirname(__FILE__) . '/wavs/southpark2.wav');
+    $wav1 = new WavFile(dirname(__FILE__) . '/wavs/spin.wav');
+    $wav2 = new WavFile(dirname(__FILE__) . '/wavs/sinetest-2-44100-8.wav');
     
     $wav1->mergeWav($wav2);
     
-    $fp = fopen(dirname(__FILE__) . '/wavs/out.wav', 'w+b');
+    $fp = fopen(dirname(__FILE__) . '/wavs/merged.wav', 'w+b');
     fwrite($fp, $wav1->makeHeader());
     fwrite($fp, $wav1->getDataSubchunk());
     
@@ -28,7 +64,7 @@ function mergeWavs()
 
 function maryHad()
 {
-    $wav = new WavMaker(1, 44100, 16);
+    $wav = new WavMaker(1, 11025, 16);
     
     $wav->generateSineWav(493.883, 0.4); // b
     $wav->generateSineWav(440, 0.4);     // a
@@ -75,10 +111,10 @@ function sineTest()
     
     foreach($sps as $samplesPerSec) {
         foreach($bps as $bitsPerSample) {
-            $wav = new WavMaker(1, $samplesPerSec, $bitsPerSample);
+            $wav = new WavMaker(2, $samplesPerSec, $bitsPerSample);
             $wav->generateSineWav(329.628, 3);
             
-            $wav->save(dirname(__FILE__) . '/wavs/sinetest-1-' . $samplesPerSec . '-' . $bitsPerSample . '.wav');
+            $wav->save(dirname(__FILE__) . '/wavs/sinetest-2-' . $samplesPerSec . '-' . $bitsPerSample . '.wav');
         }
     }
     
