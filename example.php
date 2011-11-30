@@ -12,18 +12,18 @@ squareTest();
 
 function mergeWavs()
 {
-	$wav1 = new WavFile(dirname(__FILE__) . '/wavs/sine-1-8000-8.wav');
-	$wav2 = new WavFile(dirname(__FILE__) . '/wavs/southpark2.wav');
-	
-	$wav1->mergeWav($wav2);
-	
-	$fp = fopen(dirname(__FILE__) . '/wavs/out.wav', 'w+b');
-	fwrite($fp, $wav1->makeHeader());
-	fwrite($fp, $wav1->getDataSubchunk());
-	
-	fclose($fp);
-	
-	die('Merge completed');
+    $wav1 = new WavFile(dirname(__FILE__) . '/wavs/sine-1-8000-8.wav');
+    $wav2 = new WavFile(dirname(__FILE__) . '/wavs/southpark2.wav');
+    
+    $wav1->mergeWav($wav2);
+    
+    $fp = fopen(dirname(__FILE__) . '/wavs/out.wav', 'w+b');
+    fwrite($fp, $wav1->makeHeader());
+    fwrite($fp, $wav1->getDataSubchunk());
+    
+    fclose($fp);
+    
+    die('Merge completed');
 }
 
 function maryHad()
@@ -121,15 +121,15 @@ function noiseTest()
 
 function sineWave()
 {
-	$wav = new WavMaker(1, 44100, 16); // 2 channel, 44100 samples/sec, 16 bits/sample
-	$wav->generateSineWav(659.255, 3); // E5 for 2 seconds
-	
-	
-	$fp = fopen(dirname(__FILE__) . '/wavs/sine.wav', 'w+b');
-	fwrite($fp, $wav->makeHeader());
-	fwrite($fp, $wav->getDataSubchunk());
-	
-	fclose($fp);
-	
-	die('Sine wav completed');
+    $wav = new WavMaker(1, 44100, 16); // 2 channel, 44100 samples/sec, 16 bits/sample
+    $wav->generateSineWav(659.255, 3); // E5 for 2 seconds
+    
+    
+    $fp = fopen(dirname(__FILE__) . '/wavs/sine.wav', 'w+b');
+    fwrite($fp, $wav->makeHeader());
+    fwrite($fp, $wav->getDataSubchunk());
+    
+    fclose($fp);
+    
+    die('Sine wav completed');
 }
