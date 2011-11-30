@@ -88,7 +88,7 @@ class WavFile
                     throw $ex;
                 }
             } else {
-                throw new InvalidArgumentException("Cannot construct WavFile.  File parameter is not readable.");
+                throw new InvalidArgumentException("Cannot construct WavFile.  '" . htmlspecialchars($params) . "' is not readable.");
             }
         } else if (is_array($params)) {
             foreach ($params as $key => $val) {
@@ -324,14 +324,18 @@ class WavFile
     public function appendWav(WavFile $wav) {
         // basic checks
         if ($wav->getSampleRate() != $this->getSampleRate()) {
-            // throw ex
+            throw new Exception("Sample rate for wav files do not match");
         } else if ($wav->getBitsPerSample() != $this->getBitsPerSample()) {
-            // throw ex
+            throw new Exception("Bits per sample for wav files do not match");
         } else if ($wav->getNumChannels() != $this->getNumChannels()) {
-            // throw ex
+            throw new Exception("Number of channels for wav files do not match");
         }
         
+        foreach ($wav->getSamples() as $sample) {
+        	$this->_samples[] = $sample;
+        }
         
+        return $this;
     }
     
     public function mergeWav(WavFile $wav) {
@@ -343,11 +347,13 @@ class WavFile
         
         $numSamples = sizeof($this->_samples);
         $numChannels = $this->getNumChannels();
+        $packChr     = $this->getPackFormatString();
         
         for ($s = 0; $s < $numSamples; ++$s) {
             $sample1 = $this->getSample($s);
             $sample2 = $wav->getSample($s);
             
+            // TODO: option to extend/rewind buffer to extend to for the longest wav
             if ($sample1 == null || $sample2 == null) break;
             
             $sample = '';
@@ -355,13 +361,59 @@ class WavFile
             for ($c = 1; $c <= $numChannels; ++$c) {
                 $smpl = (int)(($this->getChannelData($sample1, $c) + $this->getChannelData($sample2, $c)) / 2);
                 
-                $sample .= pack('C', $smpl);
-                //$sample .= $this->getChannelData($sample1, $c + 1) + $this->getChannelData($sample2, $c + 1) / 2;
-                //$sample .= pack('C', $this->getChannelData($sample1, $c)); 
+                $sample .= $this->packSample($smpl);
             }
             
-            //$sample = $sample1;
             $this->_samples[$s] = $sample;
+        }
+        
+        return $this;
+    }
+    
+    public function save($filename)
+    {
+        $fp = @fopen($filename, 'w+b');
+        
+        if (!$fp) {
+            throw new Exception("Failed to open " . htmlspecialchars($filename) . " for writing");
+        }
+        
+        fwrite($fp, $this->makeHeader());
+        fwrite($fp, $this->getDataSubchunk());
+        fclose($fp);
+        
+        return $this;
+    }
+    
+    
+    protected function getPackFormatString()
+    {
+        switch($this->getBitsPerSample()) {
+            case 8:
+                return 'C'; // unsigned char
+                
+            case 16:
+                return 'v'; // signed short - little endian
+                
+            case 24:
+                return 'C3';
+        }
+        
+        throw new Exception("Invalid bits per sample");
+    }
+    
+    protected function packSample($value)
+    {
+        switch ($this->getBitsPerSample()) {
+            case 8:
+            case 16:
+                return pack($this->getPackFormatString(), $value);
+                
+            case 24:
+                // 3 byte packed integer, little endian
+                return pack('C3', ($value & 0xff),
+                                  ($value >>  8) & 0xff,
+                                  ($value >> 16) & 0xff);
         }
     }
     
@@ -406,8 +458,9 @@ class WavFile
         $actualSize = $stat['size'];
         
         if ($actualSize - 8 != $RIFF['ChunkSize']) {
-            echo "$actualSize {$RIFF['ChunkSize']}\n";
-            throw new WavFormatException('Bad chunk size, does not match actual file size', 4);
+            //echo "$actualSize {$RIFF['ChunkSize']}\n";
+            trigger_error("Bad chunk size, does not match actual file size ($actualSize {$RIFF['ChunkSize']})", E_USER_NOTICE);
+            //throw new WavFormatException('Bad chunk size, does not match actual file size', 4);
         }
 
         if ($RIFF['Format'] != 0x57415645) {
@@ -442,7 +495,10 @@ class WavFile
         if ($this->getSubChunk1Size() > 16) {
             $epSize          = fread($this->_fp, 2);
             $extraParamsSize = unpack('vSize', $epSize);
-            $extraParams     = fread($this->_fp, $extraParamsSize['Size']);
+            if ($extraParamsSize['Size'] > 0) {
+            	$extraParams     = fread($this->_fp, $extraParamsSize['Size']);
+            }
+            
             $wavHeaderSize  += ($extraParamsSize['Size'] - 16);
         }
 
@@ -504,6 +560,7 @@ class WavFile
         
         $csize = $this->getBitsPerSample()/8;
         $numChannels = $this->getNumChannels();
+        $packChr = $this->getPackFormatString();
         
         $ch = $channel;
         
@@ -512,9 +569,8 @@ class WavFile
             
             if ($ch == 0 || $i == $ch) {
                 $cdata = substr($sample, ($i - 1) * $csize, $csize);
-                $data  = unpack('Csample', $cdata);
+                $data  = unpack($packChr . 'sample', $cdata);
                 $channels[$i] = (int)$data['sample'];
-                
             }
         }
         
