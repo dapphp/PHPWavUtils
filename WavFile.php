@@ -78,18 +78,18 @@ class WavFile
                 $this->$prop = $val;
             }
         } else if (is_string($params)) {
-        	if (is_readable($params)) {
-        		try {
-        			$this->openWav($params);
-        			
-        		} catch(WavFormatException $wex) {
-        			throw $wex;
-        		} catch(Exception $ex) {
-        			throw $ex;
-        		}
-        	} else {
-        		throw new InvalidArgumentException("Cannot construct WavFile.  File parameter is not readable.");
-        	}
+            if (is_readable($params)) {
+                try {
+                    $this->openWav($params);
+                    
+                } catch(WavFormatException $wex) {
+                    throw $wex;
+                } catch(Exception $ex) {
+                    throw $ex;
+                }
+            } else {
+                throw new InvalidArgumentException("Cannot construct WavFile.  File parameter is not readable.");
+            }
         } else if (is_array($params)) {
             foreach ($params as $key => $val) {
                 $this->$prop = $val;
@@ -215,6 +215,23 @@ class WavFile
         return $this;
     }
     
+    public function getAmplitude()
+    {
+        if($this->getBitsPerSample() == 8) {
+            return 255;
+        } else {
+            return (pow(2, $this->getBitsPerSample()) / 2) - 1;
+        }
+    }
+    
+    public function getMinAmplitude()
+    {
+        if ($this->getBitsPerSample() == 8) {
+            return 0;
+        } else {
+            return -$this->getAmplitude() - 1;
+        }
+    }
     public function makeHeader()
     {
         // RIFF header
@@ -297,58 +314,58 @@ class WavFile
     
     public function getSample($sampleNum)
     {
-    	if (sizeof($this->_samples) <= $sampleNum) {
-    		return null;
-    	} else {
-    		return $this->_samples[$sampleNum];
-    	}
+        if (sizeof($this->_samples) <= $sampleNum) {
+            return null;
+        } else {
+            return $this->_samples[$sampleNum];
+        }
     }
     
     public function appendWav(WavFile $wav) {
-    	// basic checks
-    	if ($wav->getSampleRate() != $this->getSampleRate()) {
-    		// throw ex
-    	} else if ($wav->getBitsPerSample() != $this->getBitsPerSample()) {
-    		// throw ex
-    	} else if ($wav->getNumChannels() != $this->getNumChannels()) {
-    		// throw ex
-    	}
-    	
-    	
+        // basic checks
+        if ($wav->getSampleRate() != $this->getSampleRate()) {
+            // throw ex
+        } else if ($wav->getBitsPerSample() != $this->getBitsPerSample()) {
+            // throw ex
+        } else if ($wav->getNumChannels() != $this->getNumChannels()) {
+            // throw ex
+        }
+        
+        
     }
     
     public function mergeWav(WavFile $wav) {
         if ($wav->getSampleRate() != $this->getSampleRate()) {
-    		throw new Exception("Sample rate for wav files do not match");
-    	} else if ($wav->getNumChannels() != $this->getNumChannels()) {
+            throw new Exception("Sample rate for wav files do not match");
+        } else if ($wav->getNumChannels() != $this->getNumChannels()) {
             throw new Exception("Number of channels for wav files does not match");
-    	}
-    	
-    	$numSamples = sizeof($this->_samples);
-    	$numChannels = $this->getNumChannels();
-    	
-    	for ($s = 0; $s < $numSamples; ++$s) {
-    		$sample1 = $this->getSample($s);
-    		$sample2 = $wav->getSample($s);
-    		
-    		if ($sample1 == null || $sample2 == null) break;
-    		
-    		$sample = '';
-    		
-    		for ($c = 1; $c <= $numChannels; ++$c) {
-    			$smpl = (int)(($this->getChannelData($sample1, $c) + $this->getChannelData($sample2, $c)) / 2);
-    			
-    			$sample .= pack('C', $smpl);
-    			//$sample .= $this->getChannelData($sample1, $c + 1) + $this->getChannelData($sample2, $c + 1) / 2;
-    			//$sample .= pack('C', $this->getChannelData($sample1, $c)); 
-    		}
-    		
-    		//$sample = $sample1;
-    		$this->_samples[$s] = $sample;
-    	}
+        }
+        
+        $numSamples = sizeof($this->_samples);
+        $numChannels = $this->getNumChannels();
+        
+        for ($s = 0; $s < $numSamples; ++$s) {
+            $sample1 = $this->getSample($s);
+            $sample2 = $wav->getSample($s);
+            
+            if ($sample1 == null || $sample2 == null) break;
+            
+            $sample = '';
+            
+            for ($c = 1; $c <= $numChannels; ++$c) {
+                $smpl = (int)(($this->getChannelData($sample1, $c) + $this->getChannelData($sample2, $c)) / 2);
+                
+                $sample .= pack('C', $smpl);
+                //$sample .= $this->getChannelData($sample1, $c + 1) + $this->getChannelData($sample2, $c + 1) / 2;
+                //$sample .= pack('C', $this->getChannelData($sample1, $c)); 
+            }
+            
+            //$sample = $sample1;
+            $this->_samples[$s] = $sample;
+        }
     }
     
-	protected function readWav()
+    protected function readWav()
     {
         try {
             $this->getWavInfo();
@@ -491,13 +508,13 @@ class WavFile
         $ch = $channel;
         
         for ($i = 1; $i <= self::MAX_CHANNEL; ++$i) {
-        	if ($i - 1 > $numChannels) break;
-        	
+            if ($i - 1 > $numChannels) break;
+            
             if ($ch == 0 || $i == $ch) {
-            	$cdata = substr($sample, ($i - 1) * $csize, $csize);
-            	$data  = unpack('Csample', $cdata);
-            	$channels[$i] = (int)$data['sample'];
-            	
+                $cdata = substr($sample, ($i - 1) * $csize, $csize);
+                $data  = unpack('Csample', $cdata);
+                $channels[$i] = (int)$data['sample'];
+                
             }
         }
         
