@@ -4,7 +4,7 @@
 * Project: PHPWavUtils: Classes for creating, reading, and manipulating WAV files in PHP<br />
 * File: WavMaker.php<br />
 *
-* Copyright (c) 2011, Drew Phillips
+* Copyright (c) 2012, Drew Phillips
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification,
@@ -33,7 +33,7 @@
 *
 * @copyright 2011 Drew Phillips
 * @author Drew Phillips <drew@drew-phillips.com>
-* @version 0.1-alpha (December 2011)
+* @version 0.2-alpha (January 2012)
 * @package PHPWavUtils
 *
 */
@@ -69,37 +69,6 @@ class WavMaker extends WavFile
             $sample = '';
             for ($channel = 0; $channel < $numChannels; ++$channel) {
                 $sample .= $this->packSample($amplitude * $this->sgn(sin($t * $i)));
-            }
-            
-            $this->_samples[] = $sample;
-        }
-    }
-    
-    public function generateSilence($duration = 1.0) {
-        $numChannels = $this->getNumChannels();
-        $numSamples  = $this->getSampleRate() * $duration;
-        
-        for ($i = 0; $i < $numSamples; ++$i) {
-            $sample = '';
-            for ($channel = 0; $channel < $numChannels; ++$channel) {
-                $sample .= $this->packSample(0);
-            }
-            
-            $this->_samples[] = $sample;
-        }
-    }
-    
-    public function generateNoise($duration = 1.0)
-    {
-        $numChannels = $this->getNumChannels();
-        $numSamples  = $this->getSampleRate() * $duration;
-        $minAmp      = $this->getMinAmplitude();
-        $maxAmp      = $this->getAmplitude();
-        
-        for ($s = 0; $s < $numSamples; ++$s) {
-            $sample = '';
-            for ($channel = 0; $channel < $numChannels; ++$channel) {
-                $sample .= $this->packSample(rand($minAmp, $maxAmp));
             }
             
             $this->_samples[] = $sample;

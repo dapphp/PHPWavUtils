@@ -4,7 +4,7 @@ NAME:
 
     PHPWavUtils - Classes for creating, reading, and manipulating WAV files in PHP
 
-VERSION: 0.1-alpha
+VERSION: 0.2-alpha
 
 AUTHOR:
 
