@@ -1,22 +1,21 @@
-NAME:
+## Name:
 
-    PHPWavUtils - Classes for creating, reading, and manipulating WAV files in PHP
+**PHPWavUtils** - Classes for creating, reading, and manipulating WAV files in PHP
 
-VERSION:
+## Version:
 
-    1.1
+1.1
 
-AUTHOR:
+## Author:
 
-    Drew Phillips <drew@drew-phillips.com>
-    Paul Voegler (http://www.voegler.eu/)
+Drew Phillips <drew@drew-phillips.com>
+Paul Voegler (http://www.voegler.eu/)
 
-REQUIREMENTS:
+## Requirements:
 
-    PHP 5.3 or greater
+PHP 5.3 or greater
 
-
-COPYRIGHT:
+## Copyright:
 
     Copyright (c) 2014 Drew Phillips
     All rights reserved.
