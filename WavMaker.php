@@ -45,41 +45,45 @@ class WavMaker extends WavFile
     public function generateSineWav($frequency = 440, $duration = 1.0) {
         $numChannels = $this->getNumChannels();
         $numSamples  = $this->getSampleRate() * $duration;
-        $amplitude   = $this->getAmplitude();
+        $amplitude   = $this->getMaxAmplitude();
         $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
-        
+
         for ($i = 0; $i < $numSamples - 1; ++$i) {
             $sample = '';
             for ($channel = 0; $channel < $numChannels; ++$channel) {
-                $sample .= $this->packSample($amplitude * sin($t * $i));
+                $sample .= self::packSample($amplitude * sin($t * $i), $this->getBitsPerSample());
             }
-            
-            $this->_samples[] = $sample;
+
+            $this->_samples .= $sample;
         }
+
+        $this->_dataSize_valid = false;
     }
-    
+
     public function generateSquareWave($frequency = 440, $duration = 1.0)
     {
         $numChannels = $this->getNumChannels();
         $numSamples  = $this->getSampleRate() * $duration;
         $amplitude   = $this->getAmplitude();
         $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
-        
+
         for ($i = 0; $i < $numSamples - 1; ++$i) {
             $sample = '';
             for ($channel = 0; $channel < $numChannels; ++$channel) {
                 $sample .= $this->packSample($amplitude * $this->sgn(sin($t * $i)));
             }
-            
+
             $this->_samples[] = $sample;
         }
+
+        $this->_dataSize_valid = false;
     }
-    
+
     public function sgn($value)
     {
         if ($value > 0) return  1;
         if ($value < 0) return -1;
-        
+
         return 0;
     }
 }
