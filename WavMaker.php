@@ -64,16 +64,16 @@ class WavMaker extends WavFile
     {
         $numChannels = $this->getNumChannels();
         $numSamples  = $this->getSampleRate() * $duration;
-        $amplitude   = $this->getAmplitude();
+        $amplitude   = $this->getMaxAmplitude();
         $t           = (M_PI * 2 * $frequency) / $this->getSampleRate();
 
         for ($i = 0; $i < $numSamples - 1; ++$i) {
             $sample = '';
             for ($channel = 0; $channel < $numChannels; ++$channel) {
-                $sample .= $this->packSample($amplitude * $this->sgn(sin($t * $i)));
+                $sample .= self::packSample($amplitude * $this->sgn(sin($t * $i)), $this->getBitsPerSample());
             }
 
-            $this->_samples[] = $sample;
+            $this->_samples .= $sample;
         }
 
         $this->_dataSize_valid = false;
