@@ -1771,8 +1771,8 @@ class WavFile
      */
     public function degrade($quality = 1.0)
     {
-        return $this->filter(array(self::FILTER_DEGRADE), array(
-            WavFile::FILTER_DEGRADE => $quality
+        return $this->filter(array(
+            self::FILTER_DEGRADE => $quality
         ));
     }
 
