@@ -36,11 +36,13 @@
 * @copyright 2014 Drew Phillips
 * @author Drew Phillips <drew@drew-phillips.com>
 * @author Paul Voegler <http://www.voegler.eu/>
-* @version 1.1 (Feb 2014)
+* @version 1.1.1 (Sep 2015)
 * @package PHPWavUtils
 * @license BSD License
 *
 * Changelog:
+*   1.1.1 (09/08/2015)
+*     - Fix degrade() method to call filter correctly (Rasmus Lerdorf)
 *
 *   1.1 (02/8/2014)
 *     - Add method setIgnoreChunkSizes() to allow reading of wav data with bogus chunk sizes set.
@@ -1769,7 +1771,7 @@ class WavFile
      */
     public function degrade($quality = 1.0)
     {
-        return $this->filter(self::FILTER_DEGRADE, array(
+        return $this->filter(array(self::FILTER_DEGRADE), array(
             WavFile::FILTER_DEGRADE => $quality
         ));
     }
